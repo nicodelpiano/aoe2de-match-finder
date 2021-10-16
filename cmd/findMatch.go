@@ -16,10 +16,15 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
 	"log"
 
 	"github.com/nicodelpiano/aoe2de-match-finder/api"
 	"github.com/spf13/cobra"
+)
+
+var (
+	errorInvalidUserID = errors.New("invalid user ID")
 )
 
 // findMatchCmd represents the findMatch command
@@ -28,7 +33,15 @@ var findMatchCmd = &cobra.Command{
 	Short: "Finds an specific AOE2 DE match",
 	Long:  `Using the aoe2.net API, we fetch a match information. For example:`,
 	Run: func(cmd *cobra.Command, args []string) {
-		matches, err := api.FetchMatches(3948882)
+		userID, err := cmd.Flags().GetInt("user-id")
+		if err != nil {
+			log.Fatalf("%v", err)
+		}
+		if userID == -1 {
+			log.Fatalf("%v", errorInvalidUserID)
+		}
+
+		matches, err := api.FetchMatches(userID)
 		if err != nil {
 			log.Fatalf("%v", err)
 		}
@@ -40,14 +53,5 @@ var findMatchCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(findMatchCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// findMatchCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// findMatchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	findMatchCmd.PersistentFlags().IntP("user-id", "u", -1, "User ID")
 }
